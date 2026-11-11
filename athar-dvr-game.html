@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>رحلة أثر: من بيانات مهملة إلى قيمة</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap">
+<style>
+:root{
+  --bg:#f3f6f5; --card:#ffffff; --ink:#17302f; --muted:#5b7270; --line:#d5e2e0;
+  --teal:#0f6b6b; --teal-soft:#e2f0ef; --sand:#c9a96e; --ok:#1d7f55; --ok-soft:#e2f4ea; --bad:#a93c35; --bad-soft:#fbe9e7;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1a1a; --card:#162626; --ink:#e8f2f1; --muted:#9fb7b4; --line:#2a4140;
+    --teal:#6cc2be; --teal-soft:#1b3535; --sand:#d8bb86; --ok:#6fd1a0; --ok-soft:#173226; --bad:#f0948c; --bad-soft:#3a1f1d;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1a1a; --card:#162626; --ink:#e8f2f1; --muted:#9fb7b4; --line:#2a4140;
+  --teal:#6cc2be; --teal-soft:#1b3535; --sand:#d8bb86; --ok:#6fd1a0; --ok-soft:#173226; --bad:#f0948c; --bad-soft:#3a1f1d;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Tajawal",system-ui,"Segoe UI",Tahoma,sans-serif;font-size:18px;line-height:1.7}
+main{max-width:640px;margin:0 auto;padding:20px 18px 40px}
+h1{font-size:28px;line-height:1.35;margin:8px 0 6px;font-weight:800}
+.sub{color:var(--muted);margin:0 0 20px;font-size:16px}
+.badge{display:inline-block;background:var(--teal-soft);color:var(--teal);border-radius:999px;padding:2px 14px;font-weight:700;font-size:15px}
+
+/* path: the memorable element */
+.path{display:flex;align-items:center;margin:18px 0 22px;padding:0 4px}
+.node{width:34px;height:34px;border-radius:50%;border:3px solid var(--line);background:var(--card);display:grid;place-items:center;font-weight:700;font-size:14px;color:var(--muted);flex:none;transition:all .3s}
+.seg{height:4px;flex:1;background:var(--line);transition:background .3s}
+.node.done{background:var(--teal);border-color:var(--teal);color:var(--card)}
+.node.now{border-color:var(--sand);color:var(--ink)}
+.seg.done{background:var(--teal)}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px}
+.q{font-size:20px;font-weight:700;margin:0 0 6px;line-height:1.6}
+.ctx{color:var(--muted);font-size:16px;margin:0 0 16px}
+.opts{display:grid;gap:10px}
+button{font:inherit;color:inherit;cursor:pointer}
+.opt{text-align:right;background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:14px 16px;min-height:56px;width:100%}
+.opt:hover:not(:disabled){border-color:var(--teal)}
+.opt:focus-visible,.go:focus-visible{outline:3px solid var(--sand);outline-offset:2px}
+.opt.ok{border-color:var(--ok);background:var(--ok-soft)}
+.opt.bad{border-color:var(--bad);background:var(--bad-soft)}
+.opt:disabled{cursor:default}
+.fb{margin-top:14px;padding:12px 14px;border-radius:12px;font-size:16px}
+.fb.ok{background:var(--ok-soft);color:var(--ok)}
+.fb.bad{background:var(--bad-soft);color:var(--bad)}
+.go{margin-top:16px;background:var(--teal);color:var(--card);border:0;border-radius:12px;padding:14px 22px;font-weight:700;min-height:52px;width:100%}
+[hidden]{display:none!important}
+.score{font-size:48px;font-weight:800;color:var(--teal);margin:4px 0}
+.risk{border-right:5px solid var(--sand);padding:4px 14px;margin:16px 0;color:var(--ink)}
+.foot{color:var(--muted);font-size:14px;text-align:center;margin-top:24px}
+</style>
+</head>
+<body>
+<main>
+  <span class="badge">تحقيق القيمة من البيانات (DVR)</span>
+  <h1>رحلة أثر: من بيانات مهملة إلى قيمة</h1>
+  <p class="sub">شركة “أثر” لتوظيف الخريجين عندها بيانات كثيرة وما تستفيد منها. ساعدوها توصل لمستوى التفعيل في 5 خطوات.</p>
+
+  <div class="path" id="path" aria-hidden="true"></div>
+
+  <section class="card" id="game">
+    <p class="ctx" id="ctx"></p>
+    <p class="q" id="q" aria-live="polite"></p>
+    <div class="opts" id="opts"></div>
+    <div class="fb" id="fb" hidden></div>
+    <button class="go" id="next" hidden></button>
+  </section>
+
+  <section class="card" id="end" hidden>
+    <p class="ctx">نتيجتك</p>
+    <p class="score" id="score"></p>
+    <p id="verdict"></p>
+    <div class="risk">لو ما طبقت أي جهة هذا المجال، تبقى بياناتها مخزنة بدون فائدة، وتضيع عليها فرص دخل وتوفير، وقد تُستخدم بياناتها بشكل يضر الخصوصية.</div>
+    <button class="go" id="again">العب من جديد</button>
+  </section>
+
+  <p class="foot">مشروع إدارة البيانات (DS3205) - جامعة أم القرى</p>
+</main>
+
+<script>
+(function(){
+  var steps = [
+    {ctx:"الخطوة 1: نفهم وضعنا", q:"عند أثر بيانات خريجين وشركات ووظائف، وما أحد يستفيد منها. وش أول خطوة؟",
+     o:["نبيع أسماء الخريجين لأي شركة تدفع","نحدد أي بيانات لها قيمة ونكتب خطة معتمدة","ننتظر لين تتضح الأمور"],a:1,
+     ok:"صح. أي رحلة تبدأ بمعرفة وش عندك من بيانات ووضع خطة معتمدة لها.",
+     bad:"بيع بيانات الأفراد بدون حماية يعرّض الشركة للمساءلة ويفقدها ثقة الخريجين، والانتظار يعني بيانات مخزنة بلا فائدة."},
+    {ctx:"الخطوة 2: نختار الفكرة", q:"أي فكرة تجيب دخل للشركة وتحمي الخصوصية؟",
+     o:["بيع السير الذاتية الكاملة للمهتمين","نشر أرقام جوالات الخريجين","تقرير مجمّع بدون أسماء للجامعات عن فجوة المهارات"],a:2,
+     ok:"صح. البيانات المجمّعة والمجهولة الهوية تعطي قيمة بدون ما تكشف أحداً.",
+     bad:"هذي الخيارات تكشف بيانات شخصية. القيمة تجي من تحليل مجمّع بدون أسماء."},
+    {ctx:"الخطوة 3: نحسب الجدوى", q:"التقرير يحتاج استثمار 110,000 ريال ويجيب 120,000 ريال في السنة. بأي مقياس نحكم إنه يستاهل؟",
+     o:["عدد صفحات التقرير","العائد على الاستثمار وفترة الاسترداد","ألوان لوحة العرض"],a:1,
+     ok:"صح. العائد على الاستثمار وفترة الاسترداد يوضحون هل الفكرة تستاهل.",
+     bad:"الصفحات والألوان ما تقول لنا إذا كسبنا أو خسرنا. المقياس الصحيح هو العائد وفترة الاسترداد."},
+    {ctx:"الخطوة 4: نحدد المسؤول", q:"الفكرة جاهزة. مين يتحمل تنفيذها ومتابعتها؟",
+     o:["الكل يتابع بدون تحديد أحد","نحدد مسؤولاً لكل فكرة بأدوار واضحة","نتركها لقسم التقنية بس"],a:1,
+     ok:"صح. لما يكون الدور واضح، المتابعة تصير مضمونة.",
+     bad:"لما كل أحد يظن غيره مسؤول، ما يتنفذ شيء. المطلوب أدوار ومسؤوليات محددة."},
+    {ctx:"الخطوة 5: نتابع النتائج", q:"بعد إطلاق الفكرة، كيف نعرف إن القيمة تتحقق فعلاً؟",
+     o:["نعتمد على الانطباع العام","ما نحتاج متابعة","لوحة مؤشرات وتقارير متابعة دورية"],a:2,
+     ok:"صح. المتابعة بالأرقام هي الي تثبت إن الجهة وصلت لمستوى التفعيل.",
+     bad:"بدون أرقام ما نقدر نثبت القيمة. نحتاج لوحة مؤشرات وتقارير دورية."}
+  ];
+  var i=0, score=0, answered=false;
+  var $=function(id){return document.getElementById(id)};
+
+  function drawPath(){
+    var p=$("path"); p.textContent="";
+    for(var k=0;k<steps.length;k++){
+      var n=document.createElement("div");
+      n.className="node"+(k<i?" done":(k===i?" now":""));
+      n.textContent=k+1; p.appendChild(n);
+      if(k<steps.length-1){var s=document.createElement("div"); s.className="seg"+(k<i?" done":""); p.appendChild(s);}
+    }
+  }
+  function show(){
+    var s=steps[i]; answered=false;
+    $("game").hidden=false; $("end").hidden=true;
+    $("ctx").textContent=s.ctx; $("q").textContent=s.q;
+    $("fb").hidden=true; $("next").hidden=true;
+    var box=$("opts"); box.textContent="";
+    s.o.forEach(function(t,idx){
+      var b=document.createElement("button"); b.className="opt"; b.type="button"; b.textContent=t;
+      b.onclick=function(){choose(idx)}; box.appendChild(b);
+    });
+    drawPath();
+  }
+  function choose(idx){
+    if(answered) return; answered=true;
+    var s=steps[i], right=idx===s.a, btns=$("opts").children;
+    for(var k=0;k<btns.length;k++){
+      btns[k].disabled=true;
+      if(k===s.a) btns[k].classList.add("ok");
+      else if(k===idx) btns[k].classList.add("bad");
+    }
+    if(right) score++;
+    var fb=$("fb"); fb.hidden=false; fb.className="fb "+(right?"ok":"bad"); fb.textContent=right?s.ok:s.bad;
+    var nx=$("next"); nx.hidden=false; nx.textContent=(i===steps.length-1)?"شوف النتيجة":"الخطوة التالية";
+    nx.focus();
+  }
+  function finish(){
+    i=steps.length; drawPath();
+    $("game").hidden=true; $("end").hidden=false;
+    $("score").textContent=score+" من "+steps.length;
+    var v = score===steps.length ? "ممتاز! وصلت أثر لمستوى 3 (التفعيل): عندها خطة، وأفكار محمية، وحساب للجدوى، ومسؤولين، ومتابعة."
+          : score>=3 ? "قريب! أثر على الطريق لمستوى التفعيل، بس تحتاج تراجع الخطوات الي أخطأت فيها."
+          : "أثر لسا في البداية. جرّب مرة ثانية وانتبه لحماية الخصوصية وقياس القيمة.";
+    $("verdict").textContent=v;
+  }
+  $("next").onclick=function(){ if(i<steps.length-1){i++;show();} else finish(); };
+  $("again").onclick=function(){ i=0;score=0;show(); };
+  show();
+})();
+</script>
+</body>
+</html>
